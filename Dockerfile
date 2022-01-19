@@ -1,8 +1,8 @@
 FROM    ajoergensen/baseimage-ubuntu
 
-LABEL	maintainer="Rizal Fauzie Ridwan <rizal@fauzie.my.id>"
+LABEL	maintainer="RXWatcher"
 
-ENV     PHP_VERSION=7.3 \
+ENV     PHP_VERSION=7.4 \
         VIRTUAL_HOST=$DOCKER_HOST \
         HOME=/var/www/whmcs \
         PUID=1000 \
@@ -12,15 +12,20 @@ ENV     PHP_VERSION=7.3 \
         REAL_IP_FROM=172.17.0.0/16 \
         SSH_PORT=2222
 
-COPY    build /build
+ADD    build/ /build
 
 RUN     build/setup.sh && rm -rf /build
 
 COPY    root/ /
+COPY    --from=ajoergensen/baseimage-ubuntu /etc/service/. /etc/service/
 
 RUN     chmod -v +x /etc/my_init.d/*.sh /etc/service/*/run
+RUN     chmod -v 700 /etc/cron.d/app
+RUN     dpkg-reconfigure openssh-server
 
-EXPOSE  2222
+# Set default php-cli version to match $PHP_VERSION
+RUN     update-alternatives --set php /usr/bin/php7.4
 
-VOLUME  /var/www/whmcs
+EXPOSE  80
+
 WORKDIR /var/www/whmcs

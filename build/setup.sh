@@ -7,18 +7,24 @@ add-apt-repository -y ppa:ondrej/php
 # Enable nginx repo
 wget -q http://nginx.org/packages/keys/nginx_signing.key
 cat nginx_signing.key | sudo apt-key add -
-add-apt-repository 'deb http://nginx.org/packages/ubuntu/ xenial nginx'
-
+add-apt-repository 'deb http://nginx.org/packages/ubuntu/ focal nginx'
+add-apt-repository 'deb http://security.ubuntu.com/ubuntu focal-security main'
 # Update installed packages
 apt-get -y update
-
+#apt-cache policy libssl
 # Install nginx and PHP
-apt-get -y install nginx php$PHP_VERSION-fpm php$PHP_VERSION-mysql php$PHP_VERSION-common \
+apt-get -y install openssl nginx php$PHP_VERSION-fpm php$PHP_VERSION-mysql php$PHP_VERSION-common php$PHP_VERSION-soap \
 	php-imagick php-igbinary php-redis php$PHP_VERSION-bcmath php$PHP_VERSION-opcache \
 	php$PHP_VERSION-enchant php$PHP_VERSION-gd php$PHP_VERSION-imap php$PHP_VERSION-intl \
 	php$PHP_VERSION-json php$PHP_VERSION-xml php$PHP_VERSION-xmlrpc php-pear \
     php$PHP_VERSION-zip php$PHP_VERSION-bz2 php$PHP_VERSION-mbstring php$PHP_VERSION-curl \
     htop nano net-tools zip unzip openssh-server
+# Install sourceguardian
+mkdir -p /tmp/sourceguardian && cd /tmp/sourceguardian && curl -o sourceguardian.zip https://www.sourceguardian.com/loaders/download/loaders.linux-x86_64.zip && \
+    unzip sourceguardian.zip && cp ixed.7.4.lin /usr/lib/php/20190902/ && \
+    bash -c 'echo "zend_extension=/usr/lib/php/20190902/ixed.7.4.lin" > /etc/php/7.4/fpm/conf.d/sourceguardian.ini' && \
+    bash -c 'echo "zend_extension=/usr/lib/php/20190902/ixed.7.4.lin" > /etc/php/7.4/cli/conf.d/sourceguardian.ini' && \
+    service php7.4-fpm restart
 
 mkdir -p /var/www
 chown -R app:app /var/www
@@ -26,6 +32,10 @@ mkdir -p /var/www/.ssh
 ln -sf /dev/stdout /var/log/nginx/access.log
 ln -sf /dev/stderr /var/log/nginx/error.log
 rm /etc/nginx/conf.d/*
+
+# cleanup syslog-ng
+sed -i 's/3.13/3.25/g' /etc/syslog-ng/syslog-ng.conf
+sed -i 's/use_dns(no);/use_dns(no); dns-cache(no); /g' /etc/syslog-ng/syslog-ng.conf
 
 # Change max execution time to 180 seconds
 sed -ri 's/(max_execution_time =) ([2-9]+)/\1 180/' /etc/php/$PHP_VERSION/fpm/php.ini

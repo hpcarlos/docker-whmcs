@@ -14,3 +14,8 @@
 0 9 * * 1-5                         app   php -q /var/www/whmcs/crons/cron.php do --AutoSuspensions >/dev/null 2>&1
 */5 * * * *                         app   php -q /var/www/whmcs/crons/pop.php >/dev/null 2>&1
 0 3 */2 * *                         app   php -q /var/www/whmcs/crons/domainsync.php >/dev/null 2>&1
+0 9 * * *                           app   php -q /var/www/whmcs/modules/addons/autoproduct_upgrade/cron.php  >/dev/null 2>&1
+* * * * *                           app   php -q /var/www/whmcs/modules/addons/rtr0Plex/streamCleaner.php  >/dev/null 2>&1
+* * * * *                           app   php -q /var/www/whmcs/modules/addons/rtr0Emby/streamCleaner.php  >/dev/null 2>&1
+* * * * *                           app   php -q /var/www/whmcs/modules/addons/rtr0Jellyfin/streamCleaner.php >/dev/null 2>&1
+

@@ -10,7 +10,33 @@ server {
         root   /usr/share/nginx/html;
     }
 
-    set_real_ip_from  {{ default .Env.REAL_IP_FROM "172.17.0.0/16" }};
+    set_real_ip_from  {{ default .Env.REAL_IP_FROM "172.18.0.0/16" }};
+	set_real_ip_from 172.17.0.0/16;
+	set_real_ip_from 172.18.0.0/16;
+	set_real_ip_from 172.19.0.0/16;
+	set_real_ip_from 172.20.0.0/16;
+	set_real_ip_from 172.21.0.0/16;
+    set_real_ip_from 103.21.244.0/22;
+    set_real_ip_from 103.22.200.0/22;
+    set_real_ip_from 103.31.4.0/22;
+    set_real_ip_from 104.16.0.0/12;
+    set_real_ip_from 108.162.192.0/18;
+    set_real_ip_from 131.0.72.0/22;
+    set_real_ip_from 141.101.64.0/18;
+    set_real_ip_from 162.158.0.0/15;
+    set_real_ip_from 172.64.0.0/13;
+    set_real_ip_from 173.245.48.0/20;
+    set_real_ip_from 188.114.96.0/20;
+    set_real_ip_from 190.93.240.0/20;
+    set_real_ip_from 197.234.240.0/22;
+    set_real_ip_from 198.41.128.0/17;
+    set_real_ip_from 2400:cb00::/32;
+    set_real_ip_from 2606:4700::/32;
+    set_real_ip_from 2803:f800::/32;
+    set_real_ip_from 2405:b500::/32;
+    set_real_ip_from 2405:8100::/32;
+    set_real_ip_from 2c0f:f248::/32;
+    set_real_ip_from 2a06:98c0::/29;
     real_ip_header    {{ default .Env.REAL_IP_HEADER "X-Forwarded-For" }};
     real_ip_recursive on;
 
@@ -18,22 +44,11 @@ server {
 	add_header X-XSS-Protection "1; mode=block";
 	add_header X-Content-Type-Options "nosniff";
 
-	location / {
-		try_files $uri $uri/ /index.php;
-
-		# Announcements
-		rewrite ^/announcements/([0-9]+)/[a-zA-Z0-9-]+.html$ /./announcements.php?id=$1 last;
-		rewrite ^/announcements$ /./announcements.php last;
-
-		# Downloads
-		rewrite ^/download/([0-9]+)/([^/]*)$ /./downloads.php?action=displaycat&catid=$1 last;
-		rewrite ^/download$ /./downloads.php last;
-
-		# Knowledgebase
-		rewrite ^/knowledgebase/([0-9]+)/[a-zA-Z0-9-]+.html$ /./knowledgebase.php?action=displayarticle&id=$1 last;
-		rewrite ^/knowledgebase/([0-9]+)/([^/]*)$ /./knowledgebase.php?action=displaycat&catid=$1 last;
-		rewrite ^/knowledgebase$ /./knowledgebase.php last;
-	}
+     location / {
+		try_files $uri $uri/ /index.php?$query_string;
+     }
+     location = /favicon.ico { access_log off; log_not_found off; }
+     location = /robots.txt  { access_log off; log_not_found off; }
 
 	location ~ \.php$ {
 		fastcgi_index   index.php;
@@ -47,19 +62,113 @@ server {
         fastcgi_intercept_errors on;
 	}
 
-	if ($request_method !~ ^(GET|HEAD|POST)$ ) {
-		return 405;
-	}
 
-	location ~* \.(css|js|png|jpe?g|gif|ico|woff|otf|ttf|eot|svg|txt|pdf|docx?|xlsx?)$ {
-		expires max;
-		access_log off;
-		add_header Pragma public;
-		add_header Cache-Control "public, must-revalidate, proxy-revalidate";
-		add_header Vary "Accept-Encoding";
-	}
-
-	location ~ /(\.|bower.json|composer.json|LICENSE|package.json|gulpfile.js) {
+    location ~ /\.(?!well-known).* {
 		deny all;
-	}
+    }
+  
+    location ^~ /vendor/ {
+	        deny all;
+		return 403;
+    }
+
+    location ~* \.(?:jpg|jpeg|gif|png|ico|cur|gz|svg|svgz|mp4|ogg|ogv|webm|htc|svg|woff|woff2|ttf)\$ {
+		expires 1M;
+		access_log off;
+	        add_header Cache-Control "public";
+    }
+  
+    location ~* \.(?:css|js)\$ {
+          expires 7d;
+          access_log off;
+          add_header Cache-Control "public";
+    }
+
+    location ~ /\.ht {
+		deny  all;
+    }
+
+    location ~ /announcements/?(.*)$ {
+        rewrite ^/(.*)$ /index.php?rp=/announcements/$1;
+    }
+
+    location ~ /download/?(.*)$ {
+        rewrite ^/(.*)$ /index.php?rp=/download$1;
+    }
+
+    location ~ /knowledgebase/?(.*)$ {
+        rewrite ^/(.*)$ /index.php?rp=/knowledgebase/$1;
+    }
+
+    location ~ /store/ssl-certificates/?(.*)$ {
+        rewrite ^/(.*)$ /index.php?rp=/store/ssl-certificates/$1;
+    }
+
+    location ~ /store/sitelock/?(.*)$ {
+        rewrite ^/(.*)$ /index.php?rp=/store/sitelock/$1;
+    }
+
+    location ~ /store/website-builder/?(.*)$ {
+        rewrite ^/(.*)$ /index.php?rp=/store/website-builder/$1;
+    }
+
+    location ~ /store/order/?(.*)$ {
+        rewrite ^/(.*)$ /index.php?rp=/store/order/$1;
+    }
+
+    location ~ /cart/domain/renew/?(.*)$ {
+        rewrite ^/(.*)$ /index.php?rp=/cart/domain/renew$1;
+    }
+
+    location ~ /account/paymentmethods/?(.*)$ {
+        rewrite ^/(.*)$ /index.php?rp=/account/paymentmethods$1;
+    }
+
+    location ~ /password/reset/?(.*)$ {
+        rewrite ^/(.*)$ /index.php?rp=/password/reset/$1;
+    }
+
+    location ~ /account/security/?(.*)$ {
+        rewrite ^/(.*)$ /index.php?rp=/account/security$1;
+    }
+
+    location ~ /subscription?(.*)$ {
+        rewrite ^/(.*)$ /index.php?rp=/subscription$1;
+    }
+
+  #Social media authorization
+    location ~ /auth/provider/google_signin/finalize/?(.*)$ {
+        rewrite ^/(.*)$ /index.php?rp=auth/provider/google_signin/finalize$1;
+    }
+
+ #WHMCS ADMIN
+    location ~ /admin/(addons|apps|search|domains|help\/license|services|setup|utilities\/system\/php-compat)(.*) {
+        rewrite ^/(.*)$ /admin/index.php?rp=/admin/$1$2 last; 
+    }
+
+    location ~ /admin/client/?(.*)/paymethods/?(.*)$ {
+        rewrite ^/(.*)$ /admin/index.php?rp=/client/?(.*)/paymethods/$1;
+    }
+
+    location ~ /admin/setup/auth/?(.*)$ {
+        rewrite ^/(.*)$ /admin/index.php?rp=/setup/auth/$1;
+    }
+
+    location ~ /admin/client/?(.*)/tickets/?(.*)$ {
+        rewrite ^/(.*)$ /admin/index.php?rp=/client/?(.*)/tickets/$1;
+    }
+
+    location ~ /admin/client/?(.*)/invoice/?(.*)/capture/?(.*)$ {
+        rewrite ^/(.*)$ /admin/index.php?rp=/client/?(.*)/invoice/?(.*)/capture/$1;
+    }
+
+    location ~ /admin/account/security/two-factor/?(.*)$ {
+        rewrite ^/(.*)$ /admin/index.php?rp=/admin/account/security/two-factor/$1;
+    }
+
+    location ~ /admin/search/intellisearch?(.*)$ {
+        rewrite ^/(.*)$ /admin/index.php?rp=/search/intellisearch/$1;
+    }
+
+
 }
